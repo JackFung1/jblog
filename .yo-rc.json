@@ -21,7 +21,7 @@
     "serviceDiscoveryType": false,
     "buildTool": "gradle",
     "enableSocialSignIn": false,
-    "enableSwaggerCodegen": true,
+    "enableSwaggerCodegen": false,
     "jwtSecretKey": "ab9095d15d1feae4b7e87db4c2c1aa357748bb0a",
     "clientFramework": "angularX",
     "useSass": true,

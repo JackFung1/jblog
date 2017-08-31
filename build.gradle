@@ -17,7 +17,6 @@ buildscript {
         classpath "org.springframework.build.gradle:propdeps-plugin:0.0.7"
         classpath "com.moowork.gradle:gradle-node-plugin:1.2.0"
         classpath "io.spring.gradle:dependency-management-plugin:0.6.1.RELEASE"
-        classpath "gradle.plugin.org.detoeuf:swagger-codegen-plugin:1.7.4"
         //jhipster-needle-gradle-buildscript-dependency - JHipster will add additional gradle build script plugins here
     }
 }
@@ -95,7 +94,6 @@ apply from: 'gradle/liquibase.gradle'
 apply from: 'gradle/gatling.gradle'
 apply from: 'gradle/mapstruct.gradle'
 apply from: 'gradle/docker.gradle'
-apply from: 'gradle/swagger.gradle'
 //jhipster-needle-gradle-apply-from - JHipster will add additional gradle scripts to be applied here
 
 if (project.hasProperty('prod')) {
