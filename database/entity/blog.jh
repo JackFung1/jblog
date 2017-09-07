@@ -14,8 +14,8 @@ entity Tag {
 }
 
 relationship ManyToOne {
-	Blog{user(login)} to User, 
-	Entry{blog(name)} to Blog  
+	Blog{user(login)} to User,
+	Entry{blog(name)} to Blog
 }
 
 relationship ManyToMany {
@@ -23,3 +23,7 @@ relationship ManyToMany {
 }
 
 paginate Entry, Tag with infinite-scroll
+
+dto Blog with mapstruct
+dto Entry with mapstruct
+dto Tag with mapstruct

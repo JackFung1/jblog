@@ -6,7 +6,7 @@ export class Entry implements BaseEntity {
         public title?: string,
         public content?: any,
         public date?: any,
-        public blog?: BaseEntity,
+        public blogId?: number,
         public tags?: BaseEntity[],
     ) {
     }

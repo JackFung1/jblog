@@ -4,6 +4,8 @@ import com.jblog.fung.JblogApp;
 
 import com.jblog.fung.domain.Entry;
 import com.jblog.fung.repository.EntryRepository;
+import com.jblog.fung.service.dto.EntryDTO;
+import com.jblog.fung.service.mapper.EntryMapper;
 import com.jblog.fung.web.rest.errors.ExceptionTranslator;
 
 import org.junit.Before;
@@ -56,6 +58,9 @@ public class EntryResourceIntTest {
     private EntryRepository entryRepository;
 
     @Autowired
+    private EntryMapper entryMapper;
+
+    @Autowired
     private MappingJackson2HttpMessageConverter jacksonMessageConverter;
 
     @Autowired
@@ -74,7 +79,7 @@ public class EntryResourceIntTest {
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        final EntryResource entryResource = new EntryResource(entryRepository);
+        final EntryResource entryResource = new EntryResource(entryRepository, entryMapper);
         this.restEntryMockMvc = MockMvcBuilders.standaloneSetup(entryResource)
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)
@@ -106,9 +111,10 @@ public class EntryResourceIntTest {
         int databaseSizeBeforeCreate = entryRepository.findAll().size();
 
         // Create the Entry
+        EntryDTO entryDTO = entryMapper.toDto(entry);
         restEntryMockMvc.perform(post("/api/entries")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(entry)))
+            .content(TestUtil.convertObjectToJsonBytes(entryDTO)))
             .andExpect(status().isCreated());
 
         // Validate the Entry in the database
@@ -127,11 +133,12 @@ public class EntryResourceIntTest {
 
         // Create the Entry with an existing ID
         entry.setId(1L);
+        EntryDTO entryDTO = entryMapper.toDto(entry);
 
         // An entity with an existing ID cannot be created, so this API call must fail
         restEntryMockMvc.perform(post("/api/entries")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(entry)))
+            .content(TestUtil.convertObjectToJsonBytes(entryDTO)))
             .andExpect(status().isBadRequest());
 
         // Validate the Alice in the database
@@ -147,10 +154,11 @@ public class EntryResourceIntTest {
         entry.setTitle(null);
 
         // Create the Entry, which fails.
+        EntryDTO entryDTO = entryMapper.toDto(entry);
 
         restEntryMockMvc.perform(post("/api/entries")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(entry)))
+            .content(TestUtil.convertObjectToJsonBytes(entryDTO)))
             .andExpect(status().isBadRequest());
 
         List<Entry> entryList = entryRepository.findAll();
@@ -165,10 +173,11 @@ public class EntryResourceIntTest {
         entry.setContent(null);
 
         // Create the Entry, which fails.
+        EntryDTO entryDTO = entryMapper.toDto(entry);
 
         restEntryMockMvc.perform(post("/api/entries")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(entry)))
+            .content(TestUtil.convertObjectToJsonBytes(entryDTO)))
             .andExpect(status().isBadRequest());
 
         List<Entry> entryList = entryRepository.findAll();
@@ -183,10 +192,11 @@ public class EntryResourceIntTest {
         entry.setDate(null);
 
         // Create the Entry, which fails.
+        EntryDTO entryDTO = entryMapper.toDto(entry);
 
         restEntryMockMvc.perform(post("/api/entries")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(entry)))
+            .content(TestUtil.convertObjectToJsonBytes(entryDTO)))
             .andExpect(status().isBadRequest());
 
         List<Entry> entryList = entryRepository.findAll();
@@ -246,10 +256,11 @@ public class EntryResourceIntTest {
             .title(UPDATED_TITLE)
             .content(UPDATED_CONTENT)
             .date(UPDATED_DATE);
+        EntryDTO entryDTO = entryMapper.toDto(updatedEntry);
 
         restEntryMockMvc.perform(put("/api/entries")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(updatedEntry)))
+            .content(TestUtil.convertObjectToJsonBytes(entryDTO)))
             .andExpect(status().isOk());
 
         // Validate the Entry in the database
@@ -267,11 +278,12 @@ public class EntryResourceIntTest {
         int databaseSizeBeforeUpdate = entryRepository.findAll().size();
 
         // Create the Entry
+        EntryDTO entryDTO = entryMapper.toDto(entry);
 
         // If the entity doesn't have an ID, it will be created instead of just being updated
         restEntryMockMvc.perform(put("/api/entries")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(entry)))
+            .content(TestUtil.convertObjectToJsonBytes(entryDTO)))
             .andExpect(status().isCreated());
 
         // Validate the Entry in the database
@@ -309,5 +321,28 @@ public class EntryResourceIntTest {
         assertThat(entry1).isNotEqualTo(entry2);
         entry1.setId(null);
         assertThat(entry1).isNotEqualTo(entry2);
+    }
+
+    @Test
+    @Transactional
+    public void dtoEqualsVerifier() throws Exception {
+        TestUtil.equalsVerifier(EntryDTO.class);
+        EntryDTO entryDTO1 = new EntryDTO();
+        entryDTO1.setId(1L);
+        EntryDTO entryDTO2 = new EntryDTO();
+        assertThat(entryDTO1).isNotEqualTo(entryDTO2);
+        entryDTO2.setId(entryDTO1.getId());
+        assertThat(entryDTO1).isEqualTo(entryDTO2);
+        entryDTO2.setId(2L);
+        assertThat(entryDTO1).isNotEqualTo(entryDTO2);
+        entryDTO1.setId(null);
+        assertThat(entryDTO1).isNotEqualTo(entryDTO2);
+    }
+
+    @Test
+    @Transactional
+    public void testEntityFromId() {
+        assertThat(entryMapper.fromId(42L).getId()).isEqualTo(42);
+        assertThat(entryMapper.fromId(null)).isNull();
     }
 }

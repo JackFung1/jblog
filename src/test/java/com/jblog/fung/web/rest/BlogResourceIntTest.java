@@ -4,6 +4,8 @@ import com.jblog.fung.JblogApp;
 
 import com.jblog.fung.domain.Blog;
 import com.jblog.fung.repository.BlogRepository;
+import com.jblog.fung.service.dto.BlogDTO;
+import com.jblog.fung.service.mapper.BlogMapper;
 import com.jblog.fung.web.rest.errors.ExceptionTranslator;
 
 import org.junit.Before;
@@ -47,6 +49,9 @@ public class BlogResourceIntTest {
     private BlogRepository blogRepository;
 
     @Autowired
+    private BlogMapper blogMapper;
+
+    @Autowired
     private MappingJackson2HttpMessageConverter jacksonMessageConverter;
 
     @Autowired
@@ -65,7 +70,7 @@ public class BlogResourceIntTest {
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        final BlogResource blogResource = new BlogResource(blogRepository);
+        final BlogResource blogResource = new BlogResource(blogRepository, blogMapper);
         this.restBlogMockMvc = MockMvcBuilders.standaloneSetup(blogResource)
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)
@@ -96,9 +101,10 @@ public class BlogResourceIntTest {
         int databaseSizeBeforeCreate = blogRepository.findAll().size();
 
         // Create the Blog
+        BlogDTO blogDTO = blogMapper.toDto(blog);
         restBlogMockMvc.perform(post("/api/blogs")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(blog)))
+            .content(TestUtil.convertObjectToJsonBytes(blogDTO)))
             .andExpect(status().isCreated());
 
         // Validate the Blog in the database
@@ -116,11 +122,12 @@ public class BlogResourceIntTest {
 
         // Create the Blog with an existing ID
         blog.setId(1L);
+        BlogDTO blogDTO = blogMapper.toDto(blog);
 
         // An entity with an existing ID cannot be created, so this API call must fail
         restBlogMockMvc.perform(post("/api/blogs")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(blog)))
+            .content(TestUtil.convertObjectToJsonBytes(blogDTO)))
             .andExpect(status().isBadRequest());
 
         // Validate the Alice in the database
@@ -136,10 +143,11 @@ public class BlogResourceIntTest {
         blog.setName(null);
 
         // Create the Blog, which fails.
+        BlogDTO blogDTO = blogMapper.toDto(blog);
 
         restBlogMockMvc.perform(post("/api/blogs")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(blog)))
+            .content(TestUtil.convertObjectToJsonBytes(blogDTO)))
             .andExpect(status().isBadRequest());
 
         List<Blog> blogList = blogRepository.findAll();
@@ -154,10 +162,11 @@ public class BlogResourceIntTest {
         blog.setHandle(null);
 
         // Create the Blog, which fails.
+        BlogDTO blogDTO = blogMapper.toDto(blog);
 
         restBlogMockMvc.perform(post("/api/blogs")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(blog)))
+            .content(TestUtil.convertObjectToJsonBytes(blogDTO)))
             .andExpect(status().isBadRequest());
 
         List<Blog> blogList = blogRepository.findAll();
@@ -214,10 +223,11 @@ public class BlogResourceIntTest {
         updatedBlog
             .name(UPDATED_NAME)
             .handle(UPDATED_HANDLE);
+        BlogDTO blogDTO = blogMapper.toDto(updatedBlog);
 
         restBlogMockMvc.perform(put("/api/blogs")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(updatedBlog)))
+            .content(TestUtil.convertObjectToJsonBytes(blogDTO)))
             .andExpect(status().isOk());
 
         // Validate the Blog in the database
@@ -234,11 +244,12 @@ public class BlogResourceIntTest {
         int databaseSizeBeforeUpdate = blogRepository.findAll().size();
 
         // Create the Blog
+        BlogDTO blogDTO = blogMapper.toDto(blog);
 
         // If the entity doesn't have an ID, it will be created instead of just being updated
         restBlogMockMvc.perform(put("/api/blogs")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(blog)))
+            .content(TestUtil.convertObjectToJsonBytes(blogDTO)))
             .andExpect(status().isCreated());
 
         // Validate the Blog in the database
@@ -276,5 +287,28 @@ public class BlogResourceIntTest {
         assertThat(blog1).isNotEqualTo(blog2);
         blog1.setId(null);
         assertThat(blog1).isNotEqualTo(blog2);
+    }
+
+    @Test
+    @Transactional
+    public void dtoEqualsVerifier() throws Exception {
+        TestUtil.equalsVerifier(BlogDTO.class);
+        BlogDTO blogDTO1 = new BlogDTO();
+        blogDTO1.setId(1L);
+        BlogDTO blogDTO2 = new BlogDTO();
+        assertThat(blogDTO1).isNotEqualTo(blogDTO2);
+        blogDTO2.setId(blogDTO1.getId());
+        assertThat(blogDTO1).isEqualTo(blogDTO2);
+        blogDTO2.setId(2L);
+        assertThat(blogDTO1).isNotEqualTo(blogDTO2);
+        blogDTO1.setId(null);
+        assertThat(blogDTO1).isNotEqualTo(blogDTO2);
+    }
+
+    @Test
+    @Transactional
+    public void testEntityFromId() {
+        assertThat(blogMapper.fromId(42L).getId()).isEqualTo(42);
+        assertThat(blogMapper.fromId(null)).isNull();
     }
 }

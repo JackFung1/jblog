@@ -6,6 +6,8 @@ import com.jblog.fung.domain.Entry;
 import com.jblog.fung.repository.EntryRepository;
 import com.jblog.fung.web.rest.util.HeaderUtil;
 import com.jblog.fung.web.rest.util.PaginationUtil;
+import com.jblog.fung.service.dto.EntryDTO;
+import com.jblog.fung.service.mapper.EntryMapper;
 import io.swagger.annotations.ApiParam;
 import io.github.jhipster.web.util.ResponseUtil;
 import org.slf4j.Logger;
@@ -36,25 +38,30 @@ public class EntryResource {
     private static final String ENTITY_NAME = "entry";
 
     private final EntryRepository entryRepository;
-    public EntryResource(EntryRepository entryRepository) {
+
+    private final EntryMapper entryMapper;
+    public EntryResource(EntryRepository entryRepository, EntryMapper entryMapper) {
         this.entryRepository = entryRepository;
+        this.entryMapper = entryMapper;
     }
 
     /**
      * POST  /entries : Create a new entry.
      *
-     * @param entry the entry to create
-     * @return the ResponseEntity with status 201 (Created) and with body the new entry, or with status 400 (Bad Request) if the entry has already an ID
+     * @param entryDTO the entryDTO to create
+     * @return the ResponseEntity with status 201 (Created) and with body the new entryDTO, or with status 400 (Bad Request) if the entry has already an ID
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PostMapping("/entries")
     @Timed
-    public ResponseEntity<Entry> createEntry(@Valid @RequestBody Entry entry) throws URISyntaxException {
-        log.debug("REST request to save Entry : {}", entry);
-        if (entry.getId() != null) {
+    public ResponseEntity<EntryDTO> createEntry(@Valid @RequestBody EntryDTO entryDTO) throws URISyntaxException {
+        log.debug("REST request to save Entry : {}", entryDTO);
+        if (entryDTO.getId() != null) {
             return ResponseEntity.badRequest().headers(HeaderUtil.createFailureAlert(ENTITY_NAME, "idexists", "A new entry cannot already have an ID")).body(null);
         }
-        Entry result = entryRepository.save(entry);
+        Entry entry = entryMapper.toEntity(entryDTO);
+        entry = entryRepository.save(entry);
+        EntryDTO result = entryMapper.toDto(entry);
         return ResponseEntity.created(new URI("/api/entries/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(ENTITY_NAME, result.getId().toString()))
             .body(result);
@@ -63,22 +70,24 @@ public class EntryResource {
     /**
      * PUT  /entries : Updates an existing entry.
      *
-     * @param entry the entry to update
-     * @return the ResponseEntity with status 200 (OK) and with body the updated entry,
-     * or with status 400 (Bad Request) if the entry is not valid,
-     * or with status 500 (Internal Server Error) if the entry couldn't be updated
+     * @param entryDTO the entryDTO to update
+     * @return the ResponseEntity with status 200 (OK) and with body the updated entryDTO,
+     * or with status 400 (Bad Request) if the entryDTO is not valid,
+     * or with status 500 (Internal Server Error) if the entryDTO couldn't be updated
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PutMapping("/entries")
     @Timed
-    public ResponseEntity<Entry> updateEntry(@Valid @RequestBody Entry entry) throws URISyntaxException {
-        log.debug("REST request to update Entry : {}", entry);
-        if (entry.getId() == null) {
-            return createEntry(entry);
+    public ResponseEntity<EntryDTO> updateEntry(@Valid @RequestBody EntryDTO entryDTO) throws URISyntaxException {
+        log.debug("REST request to update Entry : {}", entryDTO);
+        if (entryDTO.getId() == null) {
+            return createEntry(entryDTO);
         }
-        Entry result = entryRepository.save(entry);
+        Entry entry = entryMapper.toEntity(entryDTO);
+        entry = entryRepository.save(entry);
+        EntryDTO result = entryMapper.toDto(entry);
         return ResponseEntity.ok()
-            .headers(HeaderUtil.createEntityUpdateAlert(ENTITY_NAME, entry.getId().toString()))
+            .headers(HeaderUtil.createEntityUpdateAlert(ENTITY_NAME, entryDTO.getId().toString()))
             .body(result);
     }
 
@@ -90,31 +99,32 @@ public class EntryResource {
      */
     @GetMapping("/entries")
     @Timed
-    public ResponseEntity<List<Entry>> getAllEntries(@ApiParam Pageable pageable) {
+    public ResponseEntity<List<EntryDTO>> getAllEntries(@ApiParam Pageable pageable) {
         log.debug("REST request to get a page of Entries");
         Page<Entry> page = entryRepository.findAll(pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/api/entries");
-        return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
+        return new ResponseEntity<>(entryMapper.toDto(page.getContent()), headers, HttpStatus.OK);
     }
 
     /**
      * GET  /entries/:id : get the "id" entry.
      *
-     * @param id the id of the entry to retrieve
-     * @return the ResponseEntity with status 200 (OK) and with body the entry, or with status 404 (Not Found)
+     * @param id the id of the entryDTO to retrieve
+     * @return the ResponseEntity with status 200 (OK) and with body the entryDTO, or with status 404 (Not Found)
      */
     @GetMapping("/entries/{id}")
     @Timed
-    public ResponseEntity<Entry> getEntry(@PathVariable Long id) {
+    public ResponseEntity<EntryDTO> getEntry(@PathVariable Long id) {
         log.debug("REST request to get Entry : {}", id);
         Entry entry = entryRepository.findOneWithEagerRelationships(id);
-        return ResponseUtil.wrapOrNotFound(Optional.ofNullable(entry));
+        EntryDTO entryDTO = entryMapper.toDto(entry);
+        return ResponseUtil.wrapOrNotFound(Optional.ofNullable(entryDTO));
     }
 
     /**
      * DELETE  /entries/:id : delete the "id" entry.
      *
-     * @param id the id of the entry to delete
+     * @param id the id of the entryDTO to delete
      * @return the ResponseEntity with status 200 (OK)
      */
     @DeleteMapping("/entries/{id}")

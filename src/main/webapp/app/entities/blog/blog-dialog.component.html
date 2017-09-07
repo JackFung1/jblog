@@ -45,9 +45,9 @@
 
         <div class="form-group">
             <label class="form-control-label" jhiTranslate="jblogApp.blog.user" for="field_user">User</label>
-            <select class="form-control" id="field_user" name="user" [(ngModel)]="blog.user" >
+            <select class="form-control" id="field_user" name="user" [(ngModel)]="blog.userId" >
                 <option [ngValue]="null"></option>
-                <option [ngValue]="userOption.id === blog.user?.id ? blog.user : userOption" *ngFor="let userOption of users; trackBy: trackUserById">{{userOption.login}}</option>
+                <option [ngValue]="userOption.id" *ngFor="let userOption of users; trackBy: trackUserById">{{userOption.login}}</option>
             </select>
         </div>
     </div>

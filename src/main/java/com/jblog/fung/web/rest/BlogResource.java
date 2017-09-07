@@ -5,6 +5,8 @@ import com.jblog.fung.domain.Blog;
 
 import com.jblog.fung.repository.BlogRepository;
 import com.jblog.fung.web.rest.util.HeaderUtil;
+import com.jblog.fung.service.dto.BlogDTO;
+import com.jblog.fung.service.mapper.BlogMapper;
 import io.github.jhipster.web.util.ResponseUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,25 +32,30 @@ public class BlogResource {
     private static final String ENTITY_NAME = "blog";
 
     private final BlogRepository blogRepository;
-    public BlogResource(BlogRepository blogRepository) {
+
+    private final BlogMapper blogMapper;
+    public BlogResource(BlogRepository blogRepository, BlogMapper blogMapper) {
         this.blogRepository = blogRepository;
+        this.blogMapper = blogMapper;
     }
 
     /**
      * POST  /blogs : Create a new blog.
      *
-     * @param blog the blog to create
-     * @return the ResponseEntity with status 201 (Created) and with body the new blog, or with status 400 (Bad Request) if the blog has already an ID
+     * @param blogDTO the blogDTO to create
+     * @return the ResponseEntity with status 201 (Created) and with body the new blogDTO, or with status 400 (Bad Request) if the blog has already an ID
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PostMapping("/blogs")
     @Timed
-    public ResponseEntity<Blog> createBlog(@Valid @RequestBody Blog blog) throws URISyntaxException {
-        log.debug("REST request to save Blog : {}", blog);
-        if (blog.getId() != null) {
+    public ResponseEntity<BlogDTO> createBlog(@Valid @RequestBody BlogDTO blogDTO) throws URISyntaxException {
+        log.debug("REST request to save Blog : {}", blogDTO);
+        if (blogDTO.getId() != null) {
             return ResponseEntity.badRequest().headers(HeaderUtil.createFailureAlert(ENTITY_NAME, "idexists", "A new blog cannot already have an ID")).body(null);
         }
-        Blog result = blogRepository.save(blog);
+        Blog blog = blogMapper.toEntity(blogDTO);
+        blog = blogRepository.save(blog);
+        BlogDTO result = blogMapper.toDto(blog);
         return ResponseEntity.created(new URI("/api/blogs/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(ENTITY_NAME, result.getId().toString()))
             .body(result);
@@ -57,22 +64,24 @@ public class BlogResource {
     /**
      * PUT  /blogs : Updates an existing blog.
      *
-     * @param blog the blog to update
-     * @return the ResponseEntity with status 200 (OK) and with body the updated blog,
-     * or with status 400 (Bad Request) if the blog is not valid,
-     * or with status 500 (Internal Server Error) if the blog couldn't be updated
+     * @param blogDTO the blogDTO to update
+     * @return the ResponseEntity with status 200 (OK) and with body the updated blogDTO,
+     * or with status 400 (Bad Request) if the blogDTO is not valid,
+     * or with status 500 (Internal Server Error) if the blogDTO couldn't be updated
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PutMapping("/blogs")
     @Timed
-    public ResponseEntity<Blog> updateBlog(@Valid @RequestBody Blog blog) throws URISyntaxException {
-        log.debug("REST request to update Blog : {}", blog);
-        if (blog.getId() == null) {
-            return createBlog(blog);
+    public ResponseEntity<BlogDTO> updateBlog(@Valid @RequestBody BlogDTO blogDTO) throws URISyntaxException {
+        log.debug("REST request to update Blog : {}", blogDTO);
+        if (blogDTO.getId() == null) {
+            return createBlog(blogDTO);
         }
-        Blog result = blogRepository.save(blog);
+        Blog blog = blogMapper.toEntity(blogDTO);
+        blog = blogRepository.save(blog);
+        BlogDTO result = blogMapper.toDto(blog);
         return ResponseEntity.ok()
-            .headers(HeaderUtil.createEntityUpdateAlert(ENTITY_NAME, blog.getId().toString()))
+            .headers(HeaderUtil.createEntityUpdateAlert(ENTITY_NAME, blogDTO.getId().toString()))
             .body(result);
     }
 
@@ -83,29 +92,31 @@ public class BlogResource {
      */
     @GetMapping("/blogs")
     @Timed
-    public List<Blog> getAllBlogs() {
+    public List<BlogDTO> getAllBlogs() {
         log.debug("REST request to get all Blogs");
-        return blogRepository.findAll();
+        List<Blog> blogs = blogRepository.findAll();
+        return blogMapper.toDto(blogs);
         }
 
     /**
      * GET  /blogs/:id : get the "id" blog.
      *
-     * @param id the id of the blog to retrieve
-     * @return the ResponseEntity with status 200 (OK) and with body the blog, or with status 404 (Not Found)
+     * @param id the id of the blogDTO to retrieve
+     * @return the ResponseEntity with status 200 (OK) and with body the blogDTO, or with status 404 (Not Found)
      */
     @GetMapping("/blogs/{id}")
     @Timed
-    public ResponseEntity<Blog> getBlog(@PathVariable Long id) {
+    public ResponseEntity<BlogDTO> getBlog(@PathVariable Long id) {
         log.debug("REST request to get Blog : {}", id);
         Blog blog = blogRepository.findOne(id);
-        return ResponseUtil.wrapOrNotFound(Optional.ofNullable(blog));
+        BlogDTO blogDTO = blogMapper.toDto(blog);
+        return ResponseUtil.wrapOrNotFound(Optional.ofNullable(blogDTO));
     }
 
     /**
      * DELETE  /blogs/:id : delete the "id" blog.
      *
-     * @param id the id of the blog to delete
+     * @param id the id of the blogDTO to delete
      * @return the ResponseEntity with status 200 (OK)
      */
     @DeleteMapping("/blogs/{id}")

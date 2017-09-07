@@ -42,7 +42,7 @@
     ],
     "changelogDate": "20170901015123",
     "entityTableName": "entry",
-    "dto": "no",
+    "dto": "mapstruct",
     "pagination": "infinite-scroll",
     "service": "no"
 }

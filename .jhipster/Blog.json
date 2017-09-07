@@ -30,7 +30,7 @@
     ],
     "changelogDate": "20170901015122",
     "entityTableName": "blog",
-    "dto": "no",
+    "dto": "mapstruct",
     "pagination": "no",
     "service": "no"
 }
