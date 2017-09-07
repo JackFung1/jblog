@@ -1,12 +1,9 @@
 package com.jblog.fung.web.rest;
 
 import com.codahale.metrics.annotation.Timed;
-import com.jblog.fung.domain.Blog;
-
-import com.jblog.fung.repository.BlogRepository;
+import com.jblog.fung.service.BlogService;
 import com.jblog.fung.web.rest.util.HeaderUtil;
 import com.jblog.fung.service.dto.BlogDTO;
-import com.jblog.fung.service.mapper.BlogMapper;
 import io.github.jhipster.web.util.ResponseUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,12 +28,10 @@ public class BlogResource {
 
     private static final String ENTITY_NAME = "blog";
 
-    private final BlogRepository blogRepository;
+    private final BlogService blogService;
 
-    private final BlogMapper blogMapper;
-    public BlogResource(BlogRepository blogRepository, BlogMapper blogMapper) {
-        this.blogRepository = blogRepository;
-        this.blogMapper = blogMapper;
+    public BlogResource(BlogService blogService) {
+        this.blogService = blogService;
     }
 
     /**
@@ -53,9 +48,7 @@ public class BlogResource {
         if (blogDTO.getId() != null) {
             return ResponseEntity.badRequest().headers(HeaderUtil.createFailureAlert(ENTITY_NAME, "idexists", "A new blog cannot already have an ID")).body(null);
         }
-        Blog blog = blogMapper.toEntity(blogDTO);
-        blog = blogRepository.save(blog);
-        BlogDTO result = blogMapper.toDto(blog);
+        BlogDTO result = blogService.save(blogDTO);
         return ResponseEntity.created(new URI("/api/blogs/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(ENTITY_NAME, result.getId().toString()))
             .body(result);
@@ -77,9 +70,7 @@ public class BlogResource {
         if (blogDTO.getId() == null) {
             return createBlog(blogDTO);
         }
-        Blog blog = blogMapper.toEntity(blogDTO);
-        blog = blogRepository.save(blog);
-        BlogDTO result = blogMapper.toDto(blog);
+        BlogDTO result = blogService.save(blogDTO);
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(ENTITY_NAME, blogDTO.getId().toString()))
             .body(result);
@@ -94,8 +85,7 @@ public class BlogResource {
     @Timed
     public List<BlogDTO> getAllBlogs() {
         log.debug("REST request to get all Blogs");
-        List<Blog> blogs = blogRepository.findAll();
-        return blogMapper.toDto(blogs);
+        return blogService.findAll();
         }
 
     /**
@@ -108,8 +98,7 @@ public class BlogResource {
     @Timed
     public ResponseEntity<BlogDTO> getBlog(@PathVariable Long id) {
         log.debug("REST request to get Blog : {}", id);
-        Blog blog = blogRepository.findOne(id);
-        BlogDTO blogDTO = blogMapper.toDto(blog);
+        BlogDTO blogDTO = blogService.findOne(id);
         return ResponseUtil.wrapOrNotFound(Optional.ofNullable(blogDTO));
     }
 
@@ -123,7 +112,7 @@ public class BlogResource {
     @Timed
     public ResponseEntity<Void> deleteBlog(@PathVariable Long id) {
         log.debug("REST request to delete Blog : {}", id);
-        blogRepository.delete(id);
+        blogService.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();
     }
 }

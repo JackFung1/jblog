@@ -27,3 +27,7 @@ paginate Entry, Tag with infinite-scroll
 dto Blog with mapstruct
 dto Entry with mapstruct
 dto Tag with mapstruct
+
+// no service for Tag
+service Blog with serviceClass
+service Entry with serviceImpl

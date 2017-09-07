@@ -1,13 +1,10 @@
 package com.jblog.fung.web.rest;
 
 import com.codahale.metrics.annotation.Timed;
-import com.jblog.fung.domain.Entry;
-
-import com.jblog.fung.repository.EntryRepository;
+import com.jblog.fung.service.EntryService;
 import com.jblog.fung.web.rest.util.HeaderUtil;
 import com.jblog.fung.web.rest.util.PaginationUtil;
 import com.jblog.fung.service.dto.EntryDTO;
-import com.jblog.fung.service.mapper.EntryMapper;
 import io.swagger.annotations.ApiParam;
 import io.github.jhipster.web.util.ResponseUtil;
 import org.slf4j.Logger;
@@ -37,12 +34,10 @@ public class EntryResource {
 
     private static final String ENTITY_NAME = "entry";
 
-    private final EntryRepository entryRepository;
+    private final EntryService entryService;
 
-    private final EntryMapper entryMapper;
-    public EntryResource(EntryRepository entryRepository, EntryMapper entryMapper) {
-        this.entryRepository = entryRepository;
-        this.entryMapper = entryMapper;
+    public EntryResource(EntryService entryService) {
+        this.entryService = entryService;
     }
 
     /**
@@ -59,9 +54,7 @@ public class EntryResource {
         if (entryDTO.getId() != null) {
             return ResponseEntity.badRequest().headers(HeaderUtil.createFailureAlert(ENTITY_NAME, "idexists", "A new entry cannot already have an ID")).body(null);
         }
-        Entry entry = entryMapper.toEntity(entryDTO);
-        entry = entryRepository.save(entry);
-        EntryDTO result = entryMapper.toDto(entry);
+        EntryDTO result = entryService.save(entryDTO);
         return ResponseEntity.created(new URI("/api/entries/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(ENTITY_NAME, result.getId().toString()))
             .body(result);
@@ -83,9 +76,7 @@ public class EntryResource {
         if (entryDTO.getId() == null) {
             return createEntry(entryDTO);
         }
-        Entry entry = entryMapper.toEntity(entryDTO);
-        entry = entryRepository.save(entry);
-        EntryDTO result = entryMapper.toDto(entry);
+        EntryDTO result = entryService.save(entryDTO);
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(ENTITY_NAME, entryDTO.getId().toString()))
             .body(result);
@@ -101,9 +92,9 @@ public class EntryResource {
     @Timed
     public ResponseEntity<List<EntryDTO>> getAllEntries(@ApiParam Pageable pageable) {
         log.debug("REST request to get a page of Entries");
-        Page<Entry> page = entryRepository.findAll(pageable);
+        Page<EntryDTO> page = entryService.findAll(pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/api/entries");
-        return new ResponseEntity<>(entryMapper.toDto(page.getContent()), headers, HttpStatus.OK);
+        return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
     }
 
     /**
@@ -116,8 +107,7 @@ public class EntryResource {
     @Timed
     public ResponseEntity<EntryDTO> getEntry(@PathVariable Long id) {
         log.debug("REST request to get Entry : {}", id);
-        Entry entry = entryRepository.findOneWithEagerRelationships(id);
-        EntryDTO entryDTO = entryMapper.toDto(entry);
+        EntryDTO entryDTO = entryService.findOne(id);
         return ResponseUtil.wrapOrNotFound(Optional.ofNullable(entryDTO));
     }
 
@@ -131,7 +121,7 @@ public class EntryResource {
     @Timed
     public ResponseEntity<Void> deleteEntry(@PathVariable Long id) {
         log.debug("REST request to delete Entry : {}", id);
-        entryRepository.delete(id);
+        entryService.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();
     }
 }

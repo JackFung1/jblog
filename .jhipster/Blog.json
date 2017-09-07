@@ -32,5 +32,5 @@
     "entityTableName": "blog",
     "dto": "mapstruct",
     "pagination": "no",
-    "service": "no"
+    "service": "serviceClass"
 }

@@ -4,6 +4,7 @@ import com.jblog.fung.JblogApp;
 
 import com.jblog.fung.domain.Entry;
 import com.jblog.fung.repository.EntryRepository;
+import com.jblog.fung.service.EntryService;
 import com.jblog.fung.service.dto.EntryDTO;
 import com.jblog.fung.service.mapper.EntryMapper;
 import com.jblog.fung.web.rest.errors.ExceptionTranslator;
@@ -61,6 +62,9 @@ public class EntryResourceIntTest {
     private EntryMapper entryMapper;
 
     @Autowired
+    private EntryService entryService;
+
+    @Autowired
     private MappingJackson2HttpMessageConverter jacksonMessageConverter;
 
     @Autowired
@@ -79,7 +83,7 @@ public class EntryResourceIntTest {
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        final EntryResource entryResource = new EntryResource(entryRepository, entryMapper);
+        final EntryResource entryResource = new EntryResource(entryService);
         this.restEntryMockMvc = MockMvcBuilders.standaloneSetup(entryResource)
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)

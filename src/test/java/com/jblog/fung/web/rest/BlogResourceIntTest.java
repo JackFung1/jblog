@@ -4,6 +4,7 @@ import com.jblog.fung.JblogApp;
 
 import com.jblog.fung.domain.Blog;
 import com.jblog.fung.repository.BlogRepository;
+import com.jblog.fung.service.BlogService;
 import com.jblog.fung.service.dto.BlogDTO;
 import com.jblog.fung.service.mapper.BlogMapper;
 import com.jblog.fung.web.rest.errors.ExceptionTranslator;
@@ -52,6 +53,9 @@ public class BlogResourceIntTest {
     private BlogMapper blogMapper;
 
     @Autowired
+    private BlogService blogService;
+
+    @Autowired
     private MappingJackson2HttpMessageConverter jacksonMessageConverter;
 
     @Autowired
@@ -70,7 +74,7 @@ public class BlogResourceIntTest {
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        final BlogResource blogResource = new BlogResource(blogRepository, blogMapper);
+        final BlogResource blogResource = new BlogResource(blogService);
         this.restBlogMockMvc = MockMvcBuilders.standaloneSetup(blogResource)
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)

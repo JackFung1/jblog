@@ -44,5 +44,5 @@
     "entityTableName": "entry",
     "dto": "mapstruct",
     "pagination": "infinite-scroll",
-    "service": "no"
+    "service": "serviceImpl"
 }
